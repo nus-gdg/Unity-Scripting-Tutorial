@@ -1,14 +1,294 @@
 # Unity Scripting Tutorial
 
-Hi.
+ Welcome to Part 2 of GDG's Unity 2D-Tutorial! This little README is an overview of what is being taught here during the session.
 
-# laejghkjsh
-- Add box colliders to everything
+# Creating a script
+1. Right click in your project window.
+2. `Create > C# Script`
+3. A script should appear with its name already highlighted, rename it to what you want. For example, `MyScript`.
 
-- Add rigidbody2d to player
-- Add movement script to the player
+**NOTE**:
+- This will create `MyScript.cs` and `MyScript.cs.meta`
+- `MyScript.cs.meta` cannot be seen in Unity or your code editor. However, do not delete it! It is very important
+- If you wish to rename your script, do it in the Unity editor by single-clicking on its name. It will update the name of the `.meta` file as well.
+- Do **not** edit it through file explorer or your code editor
 
-- Add script to the spikes
+# Writing scripts
+**From this point forward, we will be explaining the code in laymen terms to help new developers.**
 
-- Add TriggerCollider to coin
-- Add script for OnTriggerEnter
+### Intro
+When you open the file (by double clicking the script) it should like this:
+
+```cs
+using  System.Collections;
+using  System.Collections.Generic;
+using  UnityEngine;
+
+public class MyScript : MonoBehaviour
+{
+    // Start is called before the first frame update
+    void Start()
+    {
+
+    }
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
+}
+```
+The important things to note are:
+1. `: MonoBehaviour` part is important in order for this script to be attached to `GameObject`s in the Unity editor.
+2. `Start()` is something that will run on the first frame of the game. Simply put, the code between the `{` and `}` will run only once - usually when the game starts.
+3. The code in `Update()`will run once every frame. Imagine your game is running at 60 frames per second. This `Update` code will run 60 times in one second. An [ELI5 ](https://www.reddit.com/r/explainlikeimfive/comments/752b1f/eli5_what_exactly_are_frames_in_video_games_and/)  (explain like im 5 thread) about what frames are.
+4. Don't delete the 3 statements starting with `using` unless you know what you are doing
+
+To learn more: [https://docs.unity3d.com/Manual/ExecutionOrder.html](https://docs.unity3d.com/Manual/ExecutionOrder.html)
+
+Once created, you can attach it to a `GameObject` in the `Scene` or a `Prefab` in the project window.
+
+## Writing a movement script
+ Before continuing, we would like you to do the following
+1. Create a `Scripts` folder in the `Assets` folder
+2. Create a script called `Movement`
+3. Attach the `Movement` script to the `Player` prefab found in `Assets/Prefabs`
+
+**NOTE**: notice how the `Player` prefab has a `Rigidbody2D` component. We will use this to move the player.
+
+### Trying things out
+Now open the `Movement` script and type the following in `Update` like so:
+```cs
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    rigidbody.velocity = Vector2.right;
+}
+```
+If you run the sample scene provided, our `Player` will be constantly moving to the right. A basic explanation would be we are causing the Player to move right every frame. Specifically, we are setting the velocity of our player to the right every frame.
+
+**NOTE**: Try moving the copied line into the `Start` instead. You should see the `Player` move to the right before coming to a halt when he hits the ground. Can you explain why?
+
+By adjusting the velocity of the `Rigidbody2d` we are able to move the player. Now we just have to make him move when we want to - when the human player presses the appropriate buttons.
+
+### Handling Input
+Change `Update` to this:
+```cs
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    if (Input.GetKey(KeyCode.D))
+    {
+        rigidbody.velocity = Vector2.right;
+    }
+}
+```
+The code is explained like so: If the `D` button is pressed, set the velocity of the player to the right.
+When you run the scene now, the `Player` will start moving only when you press `D`.
+
+### Setting x velocity
+Currently there are two problems with this implementation.
+1. The player's Y velocity is reset when when he presses the `D` button.
+2. If the player touches a surface, it will naturally slow down. However, try setting the `Gravity Scale` value to 0. The `Player` will float and not touch any surface. If we press `D` now, he will move indefinitely.
+
+These behaviours are unwanted. To remedy this we should change the x velocity of his `Rigidbody2D` like so:
+
+```cs
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    Vector2 velocity = rigidbody.velocity; // get the original velocity
+    if (Input.GetKey(KeyCode.D))
+    {
+        velocity.x = 1;
+    }
+    else
+    {
+        velocity.x = 0;
+    }
+    rigidbody.velocity = velocity;
+}
+```
+
+So now the code reads like this: Every frame, if `D` is pressed, the player velocity x will be one, the positive x direction, and thus to the right, otherwise, reset it to 0;
+
+**NOTE**: For the advanced or more experienced developers. One would wonder why we aren't setting the velocity directly like `rigidbody.velocity.x = 1`. The reason is because `velocity` is a [property](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/properties) and we cant edit each component of the vector individually.
+
+### Left and Right
+
+Now as an exercise, implement the left direction. Specifically:
+1. if `D` key is pressed, move the `Player` to the right
+1. otherwise if `A` key is pressed move the `Player` to the left
+
+**HINT**: For new programmers, to do a otherwise if, you can use `else if`. The structure should be like this:
+```cs
+if (something)
+{
+}
+else if (something different)
+{
+}
+else
+{
+}
+```
+
+### Jumping
+If you made it this far, good job! For those who couldn't get it here's something you can replace your original code with:
+```cs
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    Vector2 velocity = rigidbody.velocity;
+    if (Input.GetKey(KeyCode.D))
+    {
+        velocity.x = 1;
+    }
+    else if (Input.GetKey(KeyCode.A))
+    {
+        velocity.x = -1;
+    }
+    else
+    {
+        velocity.x = 0;
+    }
+    rigidbody.velocity = velocity;
+}
+```
+**NOTE** There are many other ways to do this (for example, using `Transform`), left as an exercise. Also, note that we have not implemented movement speed. If you want to know more, feel free to find us on our discord!
+
+Now back to jumping. To jump we can set the y velocity to be a positive value when the `Space` key is pressed:
+
+```cs
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    Vector2 velocity = rigidbody.velocity;
+    if (Input.GetKey(KeyCode.Space))
+        velocity.y = 10;
+    if (Input.GetKey(KeyCode.D))
+    // additional code left out for space
+}
+```
+**NOTE** The value 10 is an arbitrary value and should be changed on your scene. It may be good to expose this as a `public float` variable to be adjusted in the inspector. To learn more click [here](https://docs.unity3d.com/Manual/VariablesAndTheInspector.html).
+
+**NOTE**: Without putting an `else if` before `(Input.GetKey(KeyCode.D))`. It means that the `A` and `D` keys can be pressed together with the `Space` key.
+
+### Grounded Check
+There's a huge problem with jumping logic. If you play around for a bit, you will soon realize that if hold down `Space`, the `Player` can fly indefinitely. Unless you are making a super hero game, this clearly is unwanted. If we try to think about this logically, a simple condition we can check before jumping would be to check if the `Player` is grounded (ie two feet are on the ground). This makes sense, only if the `Player` is on the ground would he be able to propel his body upward (jump).
+
+To do this check we will make use of `Collider`s to detect a `Player` is touching the ground. Just below your `Update` code, put:
+```cs
+void Update()
+{
+ // code removed for space
+}
+
+void OnCollisionEnter2D(Collision2D collision)
+{
+
+}
+```
+`OnCollisionEnter2D` will be executed if the `Player` 's `Collider2D` begins to touch another `Collider2D`. `Collision2D collision` will be information about what the `Player` is touching. We can use that to detect if the `Player` is grounded.
+
+Update you code as such:
+
+```cs
+private bool Grounded = false;
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    Vector2 velocity = rigidbody.velocity;
+    if (Input.GetKey(KeyCode.Space) && Grounded)
+    {
+        velocity.y = 10;
+        Grounded = false;
+    }
+    // Left and Right Code omitted
+}
+
+void OnCollisionEnter2D(Collision2D collision)
+{
+    Grounded = true;
+}
+```
+The code works this way: When the `Player` 's `Collider2D` begins to touch another `Collider2D`, it will assume that it touches the ground and thus set `Grounded` to `true`. The next time the player presses `Space`, he will also be grounded and have his y velocity updated.
+
+Important points:
+1. Yes the `private bool Grounded = false` is outside of all the function. However it should be within the curly braces of `public class Movement : MonoBehaviour`
+2. `bool` is a boolean, a true or false value. It can't be anything else.
+3. The `&&` operator is a logical `AND` meaning that `Grounded` must be `true` and the player must have pressed `Space
+4. `Grounded = false` is done after space has been pressed
+
+**NOTE** This implementation is far from perfect. Consider the `Player` hitting a ceiling. `OnCollisionEnter2D` will be executed and consequently set `Grounded = true` incorrectly. This is not simple because the ceiling we hit from the bottom, could be a platform on top - in some cases `Grounded = true` is correct. A possible solution is to create another `Collider2D` and place it at the feet of the `Player` and detect collisions only for the "feet collider" to check for grounded, similar to how we feel the ground with our feet.
+
+## Flipping the sprite
+**NOTE** You can think of a sprite as a 2D image. In this case, we are referring to the 2D image of the `Player`
+
+We have a functional `Movement` script now. However, notice when we move left, our `Player` faces the wrong direction. Given that we have set up the `Movement` script in the way mentioned above, a simple way to remedy is to flip the `Sprite` direction when move left. If you notice the `SpriteRenderer` component in the Unity editor, it has a flip option for x and y. If we toggle it, it will cause the sprite to change direction. We can update this value in our `Movement` script:
+
+```cs
+void Update()
+{
+    // jump code
+    if (Input.GetKey(KeyCode.D))
+    {
+        velocity.x = 1;
+        GetComponent<SpriteRenderer>().flipX = false;
+    }
+    else if (Input.GetKey(KeyCode.A))
+    {
+        velocity.x = -1;
+        GetComponent<SpriteRenderer>().flipX = true;
+    }
+    else
+    // remaining code
+}
+```
+**NOTE**: In the previous frame, the `Sprite` could have been already facing left. When we move right, we must unflip the sprite direction by setting `flipX = false`. If the `Sprite` was originally facing right, no harm is done by resetting it to `false`.
+
+## Collecting Coins
+
+### Trigger collision
+In our `Assets/Prefabs` folder,  we have a `Coin` prefab. Drag it in onto the scene. Its components contain a `CircleCollider2D` and if you notice carefully, its `Is Trigger` is ticked, meaning it is a trigger collider. This was explained in previous tutorials.
+
+Instead of `OnCollisionEnter2D`, trigger colliders will execute a different method `OnTriggerEnter2D`. We can use this to detect the coin. Let's detect the coin collision and destroy the coin `GameObject`, we can do it in `Movement` for convenience:
+```cs
+void OnTriggerEnter2D(Collider2D collider)
+{
+    Destroy(collider.gameObject);
+}
+```
+**NOTE**:
+1. `OnTriggerEnter2D` takes in a `Collider2D ` instead of `Collision2D`
+2. We can `Destroy` the coin's `GameObject` calling `Destroy(collider.gameObject);`
+    - a very common mistake would be to destroy the `Collider2D `. This will only destroy the component but not the actual `GameObject` in the scene.
+3. This will destroy any `GameObject` with a trigger collider. In our sample game this is fine. However, if there are other triggers, you may not want to destroy it. We can use [tags or layers](https://docs.unity3d.com/560/Documentation/Manual/class-TagManager.html) to control the collision behaviour.
+
+### Increasing Score
+Destroying coins seem pretty meaningless. We can add some value to collecting coins by reward the player with a score. Every time the `Player` collects a coin, we can add to a score like this:
+```cs
+public int Score = 0;
+void OnTriggerEnter2D(Collider2D collider)
+{
+    Score = Score + 1;
+    Destroy(collider.gameObject);
+}
+```
+Thanks to [serialized public variables](https://docs.unity3d.com/Manual/VariablesAndTheInspector.html) we are able to see the score appear on the component. We can also log our this event to our console like so:
+
+```cs
+public int Score = 0;
+void OnTriggerEnter2D(Collider2D collider)
+{
+    Score = Score + 1;
+    Debug.Log("My Score: " + Score);
+    Destroy(collider.gameObject);
+}
+```
+If you open the console window under `Window > General > Console` (window is found on top), you can see that when you hit a coin, you will have a statement logged `My Score: 1`.
+
+**NOTE** This logging will not appear in the final game it is best to present this score on the screen. This UI will be covered in the actual tutorial if there is time. As of now it will be left unwritten.
+
+# Credits
+This tutorial was done by the National University of Singapore Games Development Group
