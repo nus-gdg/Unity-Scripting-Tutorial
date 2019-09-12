@@ -394,7 +394,7 @@ Now when you collider with the a coin, it will be destroyed, and your text will 
 
 # End
 
-If you made it this far, thanks for reading through the tutorial. Of course more can be done to improve the game. For example we can kill the player when he hits the spikes. We can also separate our code to different scripts for modularity. If you have any questions, don't hesitate to look for us on discord. Below will be references to the final code.
+If you made it this far, thanks for reading through the tutorial. Of course more can be done to improve the game. For example we can kill the player when he hits the spikes. We can also separate our code to different scripts for modularity. If you have any questions, don't hesitate to look for us on discord. Below will be references to the final code. Note, everything after the `//` need not be copied. They are comments to help you understand the code.
 
 ## Reference for Final Code
 ```cs
@@ -405,48 +405,79 @@ using UnityEngine.UI;
 
 public class Movement : MonoBehaviour
 {
-    public float JumpSpeed = 10;
-    public float RunSpeed = 5;
-    public int Score = 0;
-    public Text ScoreText;
+    public float JumpSpeed = 10; // Player's score
+    public float RunSpeed = 5; // Player's score
+    public int Score = 0; // Player's score
+    public Text ScoreText; // Reference to the Text on the Screen
     void Update()
     {
+        // Get a reference to the Rigidbody2D component on the Player
         Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+
+        // Get a reference to the SpriteRenderer component on the Player
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+
+        // Copy the current velocity of the Player
         Vector2 velocity = rigidbody.velocity;
 
+        // When the human player hits space and the player in the game has his feet on the ground
         if (Input.GetKey(KeyCode.Space) && Grounded)
         {
+            // set our upward speed to a positive value
             velocity.y = JumpSpeed;
+
+            // record that our player has jumped and thus his feet are not on the ground
             Grounded = false;
         }
 
+        // When the human player hits D
         if (Input.GetKey(KeyCode.D))
         {
-            velocity.x = 1;
+            // set our horizontal speed to be to the right
+            velocity.x = RunSpeed;
+
+            // unflip our sprite
             spriteRenderer.flipX = false;
         }
+         // If the D key was not hit but the human player hits A instead
         else if (Input.GetKey(KeyCode.A))
         {
-            velocity.x = -1;
+            // set our horizontal speed to be to the left (negative x)
+            velocity.x = -RunSpeed;
+
+             // flip our sprite
             spriteRenderer.flipX = true;
         }
+        // Left and Right was not pressed
         else
         {
+            // set our horizontal speed zero
             velocity.x = 0;
         }
+
+        // Update our player's velocity to the new one updated based on input
         rigidbody.velocity = velocity;
     }
 
+    // This function is called when our player's Collider2D begins to touch another Collider2D
     void OnCollisionEnter2D(Collision2D collision)
     {
+        // We assume he touched the ground
         Grounded = true;
     }
 
+    // This function is called when our player's Collider2D begins to enter a trigger collider
     void OnTriggerEnter2D(Collider2D collider)
     {
+        // We assume he hit a coin
+
+        // Increase score
         Score = Score + 1;
+
+        // Destroy the coin game object
         Destroy(collider.gameObject);
+
+        // Update the text shown on our game screen
         ScoreText.text = "Score: " + Score;
     }
 }
