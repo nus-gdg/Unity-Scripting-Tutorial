@@ -170,9 +170,64 @@ void Update()
     // additional code left out for space
 }
 ```
-**NOTE** The value 10 is an arbitrary value and should be changed on your scene. It may be good to expose this as a `public float` variable to be adjusted in the inspector. To learn more click [here](https://docs.unity3d.com/Manual/VariablesAndTheInspector.html).
 
 **NOTE**: Without putting an `else if` before `(Input.GetKey(KeyCode.D))`. It means that the `A` and `D` keys can be pressed together with the `Space` key.
+
+## Public Fields
+
+For our current implementation, we are manually setting a value for the y velocity (10) and x velocities (1 and -1). Based on your level design you may need to readjust this values so that he can reach various platforms and have faster movement. Readjusting the values of the `Player` can get very tedious for developers as it requires updating the code, compiling, then checking the game. What if we can manually edit this values in real time in the Unity editor?
+
+We can do so by using `public float`s which will be exposed in the inspector of the Unity editor like so:
+
+```cs
+public float JumpSpeed;
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    Vector2 velocity = rigidbody.velocity;
+    if (Input.GetKey(KeyCode.Space))
+    {
+        velocity.y = JumpSpeed;
+    }
+    // Left and Right Code omitted
+}
+```
+
+Now in the `Movement` component of your `Player` you should see `Jump Speed` with an input box. You can adjust this value to whatever you want and it will update the values used for that particular `Player`! For example if I change it to 20, the `Player` in the the scene will now jump higher! To learn more click [here](https://docs.unity3d.com/Manual/VariablesAndTheInspector.html).
+
+As a quick exercise, try to implement this for our velocities by creating a `public float RunSpeed`!
+
+---
+
+If you made it here, or are lost, here's some coe you can refer to!
+
+```cs
+public float JumpSpeed;
+public float RunSpeed;
+void Update()
+{
+    Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+    Vector2 velocity = rigidbody.velocity;
+    if (Input.GetKey(KeyCode.Space))
+    {
+        velocity.y = JumpSpeed;
+    }
+
+    if (Input.GetKey(KeyCode.D))
+    {
+        velocity.x = RunSpeed;
+    }
+    else if (Input.GetKey(KeyCode.A))
+    {
+        velocity.x = -RunSpeed;
+    }
+    else
+    {
+        velocity.x = 0;
+    }
+    rigidbody.velocity = velocity;
+}
+```
 
 ### Grounded Check
 There's a huge problem with jumping logic. If you play around for a bit, you will soon realize that if hold down `Space`, the `Player` can fly indefinitely. Unless you are making a super hero game, this clearly is unwanted. If we try to think about this logically, a simple condition we can check before jumping would be to check if the `Player` is grounded (ie two feet are on the ground). This makes sense, only if the `Player` is on the ground would he be able to propel his body upward (jump).
@@ -194,6 +249,8 @@ void OnCollisionEnter2D(Collision2D collision)
 Update you code as such:
 
 ```cs
+public float JumpSpeed;
+public float RunSpeed;
 private bool Grounded = false;
 void Update()
 {
@@ -201,7 +258,7 @@ void Update()
     Vector2 velocity = rigidbody.velocity;
     if (Input.GetKey(KeyCode.Space) && Grounded)
     {
-        velocity.y = 10;
+        velocity.y = JumpSpeed;
         Grounded = false;
     }
     // Left and Right Code omitted
@@ -233,12 +290,12 @@ void Update()
     // jump code
     if (Input.GetKey(KeyCode.D))
     {
-        velocity.x = 1;
+        velocity.x = RunSpeed;
         GetComponent<SpriteRenderer>().flipX = false;
     }
     else if (Input.GetKey(KeyCode.A))
     {
-        velocity.x = -1;
+        velocity.x = -RunSpeed;
         GetComponent<SpriteRenderer>().flipX = true;
     }
     else
@@ -288,7 +345,112 @@ void OnTriggerEnter2D(Collider2D collider)
 ```
 If you open the console window under `Window > General > Console` (window is found on top), you can see that when you hit a coin, you will have a statement logged `My Score: 1`.
 
-**NOTE** This logging will not appear in the final game it is best to present this score on the screen. This UI will be covered in the actual tutorial if there is time. As of now it will be left unwritten.
+## Displaying Score
 
-# Credits
+A very important thing to note: the logging by `Debug.Log` will not appear in the final game, it is meant for debugging your code! It is best to present this score on the screen by adding Text on the Screen. In Unity, we can use `Canvas`es and `Text`s to display text on the screen.
+
+In your scene hierarchy, right click and create a text: `UI > Text`. This will create a `Canvas` object and a `Text` object that is a child of it. Now do the following:
+
+1. Adjust the `Text` object such that it is within the white border (which is your canvas). You should be able to see the text when you switch to the game window. If you move it to the top left hand corner of the white rectangle, it will appear on the top left of your game window.
+1. If you select the `Text` game object, it will have a `Text` component that has a `Text` input field (too many texts...). Currently in the input field, it should say `New Text`. You can change it to whatever you want.
+1. You can also change the font size of the text and the Color using the same component.
+
+
+Now lets hook up this `Text` to our game logic.
+At the very top of your add the `using UnityEngine.UI;` statement and create a `public Text ScoreText` field like so:
+
+```cs
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI; // IMPORTANT!
+
+public class Movement : MonoBehaviour
+{
+    public float JumpSpeed = 10;
+    public float RunSpeed = 5;
+    public int Score = 0;
+    public Text ScoreText; // Reference to the Text!
+    void Update()
+    {
+        //...
+    }
+    //...
+}
+```
+This `public Text ScoreText` will appear in your `Movement` component of your `Player`. You can drag the `Text` game object directly into your slot that says `Score Text`.
+
+Lastly, we should update the `Text` whenever we get a coin and update our score! Simply replace the `Debug.Log` statement with:
+
+```cs
+void OnTriggerEnter2D(Collider2D collider)
+{
+    Score = Score + 1;
+    Destroy(collider.gameObject);
+    ScoreText.text = "Score: " + Score;
+}
+```
+Now when you collider with the a coin, it will be destroyed, and your text will be updated to reflect your score.
+
+# End
+
+If you made it this far, thanks for reading through the tutorial. Of course more can be done to improve the game. For example we can kill the player when he hits the spikes. We can also separate our code to different scripts for modularity. If you have any questions, don't hesitate to look for us on discord. Below will be references to the final code.
+
+## Reference for Final Code
+```cs
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class Movement : MonoBehaviour
+{
+    public float JumpSpeed = 10;
+    public float RunSpeed = 5;
+    public int Score = 0;
+    public Text ScoreText;
+    void Update()
+    {
+        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        Vector2 velocity = rigidbody.velocity;
+
+        if (Input.GetKey(KeyCode.Space) && Grounded)
+        {
+            velocity.y = JumpSpeed;
+            Grounded = false;
+        }
+
+        if (Input.GetKey(KeyCode.D))
+        {
+            velocity.x = 1;
+            spriteRenderer.flipX = false;
+        }
+        else if (Input.GetKey(KeyCode.A))
+        {
+            velocity.x = -1;
+            spriteRenderer.flipX = true;
+        }
+        else
+        {
+            velocity.x = 0;
+        }
+        rigidbody.velocity = velocity;
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        Grounded = true;
+    }
+
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        Score = Score + 1;
+        Destroy(collider.gameObject);
+        ScoreText.text = "Score: " + Score;
+    }
+}
+```
+
+## Credits
 This tutorial was done by the National University of Singapore Games Development Group
